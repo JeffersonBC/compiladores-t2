@@ -1,4 +1,6 @@
-%token <string> IGUAL MUL DIV SOMA SUB
+%token <string> ID
+
+%token <string> ATRIB MUL DIV SOMA SUB
 
 %token <string> IGUAL DIF MAIOR MAIGUAL MENOR MEIGUAL
 
@@ -6,11 +8,12 @@
 
 %token <string> V PV ACO FCO AP FP ASPAS
 
+%start programa
 %%
     programa: declaracao-lista;
     declaracao-lista: declaracao-lista declaracao | declaracao;
     declaracao: var-declaracao | fun-declaracao;
-    var-declaracao: tipo-especificador ID; | tipo-especificador ID[NUM];;
+    var-declaracao: tipo-especificador ID; | tipo-especificador ID[NUM] PV;
     tipo-especificador: int | void;
     fun-declaracao: tipo-especificador ID AP params FP composto-decl;
     params: param-lista | void;
@@ -20,10 +23,10 @@
     local-declaracoes: local-declaracoes var-declaracao | vazio;
     statement-lista: statement-lista statement | vazio;
     statement: expressao-decl | composto-decl | selecao-decl | iteracao-decl |retorno-decl;
-    expressao-decl: expressao ; | ;;
+    expressao-decl: expressao PV | PV;
     selecao-decl: if AP expressao FP statement | if AP expressao FP statement else statement;
     iteracao-decl: while AP expressao FP statement;
-    retorno-decl: return; | return expressao ;;
+    retorno-decl: return; | return expressao PV;
     expressao: var = expressao | simples-expressao;
     var: ID | ID [ expressao ];
     simples-expressao: soma-expressao relacional soma-expressao | soma-expressao;
