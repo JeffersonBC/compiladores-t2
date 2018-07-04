@@ -1,3 +1,10 @@
+%token <string> IGUAL MUL DIV SOMA SUB
+
+%token <string> IGUAL DIF MAIOR MAIGUAL MENOR MEIGUAL
+
+%token <string> OP_LOG_NAO OP_LOG_AND OP_LOG_OR
+
+%token <string> V PV ACO FCO AP FP ASPAS
 
 %%
     programa: declaração-lista;
