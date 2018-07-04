@@ -12,7 +12,7 @@
     declaracao: var-declaracao | fun-declaracao;
     var-declaracao: tipo-especificador ID; | tipo-especificador ID[NUM];;
     tipo-especificador: int | void;
-    fun-declaracao: tipo-especificador ID( params ) composto-decl;
+    fun-declaracao: tipo-especificador ID AP params FP composto-decl;
     params: param-lista | void;
     param-lista: param-lista, param | param;
     param: tipo-especificador ID | tipo-especificador ID[ ];
@@ -21,8 +21,8 @@
     statement-lista: statement-lista statement | vazio;
     statement: expressao-decl | composto-decl | selecao-decl | iteracao-decl |retorno-decl;
     expressao-decl: expressao ; | ;;
-    selecao-decl: if (expressao) statement | if (expressao) statement else statement;
-    iteracao-decl: while (expressao) statement;
+    selecao-decl: if AP expressao FP statement | if AP expressao FP statement else statement;
+    iteracao-decl: while AP expressao FP statement;
     retorno-decl: return; | return expressao ;;
     expressao: var = expressao | simples-expressao;
     var: ID | ID [ expressao ];
@@ -32,8 +32,8 @@
     soma: + | -;
     termo: termo mult fator | fator;
     mult: * | /;
-    fator: ( expressao ) | var | ativacao | NUM;
-    ativacao: ID ( args );
+    fator:  AP expressao FP | var | ativacao | NUM;
+    ativacao: ID  AP args FP;
     args: arg-lista | vazio;
     arg-lista: arg-lista, expressao | expressao;
 %%
