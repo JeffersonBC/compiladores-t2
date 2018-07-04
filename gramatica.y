@@ -7,33 +7,33 @@
 %token <string> V PV ACO FCO AP FP ASPAS
 
 %%
-    programa: declaração-lista;
-    declaração-lista: declaração-lista declaração | declaração;
-    declaração: var-declaração | fun-declaração;
-    var-declaração: tipo-especificador ID; | tipo-especificador ID[NUM];;
+    programa: declaracao-lista;
+    declaracao-lista: declaracao-lista declaracao | declaracao;
+    declaracao: var-declaracao | fun-declaracao;
+    var-declaracao: tipo-especificador ID; | tipo-especificador ID[NUM];;
     tipo-especificador: int | void;
-    fun-declaração: tipo-especificador ID( params ) composto-decl;
+    fun-declaracao: tipo-especificador ID( params ) composto-decl;
     params: param-lista | void;
     param-lista: param-lista, param | param;
     param: tipo-especificador ID | tipo-especificador ID[ ];
-    composto-decl: { local-declarações statement-lista };
-    local-declarações: local-declarações var-declaração | vazio;
+    composto-decl: { local-declaracoes statement-lista };
+    local-declaracoes: local-declaracoes var-declaracao | vazio;
     statement-lista: statement-lista statement | vazio;
-    statement: expressão-decl | composto-decl | seleção-decl | iteração-decl |retorno-decl;
-    expressão-decl: expressão ; | ;;
-    seleção-decl: if (expressão) statement | if (expressão) statement else statement;
-    iteração-decl: while (expressão) statement;
-    retorno-decl: return; | return expressão ;;
-    expressão: var = expressão | simples-expressão;
-    var: ID | ID [ expressão ];
-    simples-expressão: soma-expressão relacional soma-expressão | somaexpressão;
+    statement: expressao-decl | composto-decl | selecao-decl | iteracao-decl |retorno-decl;
+    expressao-decl: expressao ; | ;;
+    selecao-decl: if (expressao) statement | if (expressao) statement else statement;
+    iteracao-decl: while (expressao) statement;
+    retorno-decl: return; | return expressao ;;
+    expressao: var = expressao | simples-expressao;
+    var: ID | ID [ expressao ];
+    simples-expressao: soma-expressao relacional soma-expressao | soma-expressao;
     relacional: <= | < | > | >= | == | !=;
-    soma-expressão: soma-expressão soma termo | termo;
+    soma-expressao: soma-expressao soma termo | termo;
     soma: + | -;
     termo: termo mult fator | fator;
     mult: * | /;
-    fator: ( expressão ) | var | ativação | NUM;
-    ativação: ID ( args );
+    fator: ( expressao ) | var | ativacao | NUM;
+    ativacao: ID ( args );
     args: arg-lista | vazio;
-    arg-lista: arg-lista, expressão | expressão;
+    arg-lista: arg-lista, expressao | expressao;
 %%
