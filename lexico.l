@@ -29,7 +29,8 @@ IGUAL {ATRIB}{ATRIB}
 DIF !{ATRIB}
 PV \;
 V \,
-AP FP FP
+AP \(
+FP \)
 ACO \[
 FCO \]
 ACH \{
