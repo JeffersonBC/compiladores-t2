@@ -1,4 +1,4 @@
-%token <string> ID INT Void IF Return While
+%token <string> ID INT Void IF Else Return While
 
 %token <string> ATRIB MUL DIV SOMA SUB
 
@@ -24,7 +24,7 @@
     statement-lista: statement-lista statement | vazio;
     statement: expressao-decl | composto-decl | selecao-decl | iteracao-decl | retorno-decl;
     expressao-decl: expressao PV | PV;
-    selecao-decl: IF AP expressao FP statement | IF AP expressao FP statement else statement;
+    selecao-decl: IF AP expressao FP statement | IF AP expressao FP statement Else statement;
     iteracao-decl: While AP expressao FP statement;
     retorno-decl: Return PV | Return expressao PV;
     expressao: var = expressao | simples-expressao;
