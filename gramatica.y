@@ -1,4 +1,4 @@
-%token <string> ID INT Void IF Else Return While
+%token <string> ID INT NUM Void IF Else Return While
 
 %token <string> ATRIB MUL DIV SOMA SUB
 
@@ -7,6 +7,8 @@
 %token <string> OP_LOG_NAO OP_LOG_AND OP_LOG_OR
 
 %token <string> V PV ACO FCO AP FP ACH FCH
+
+%token <string> vazio
 
 %start programa
 %%
@@ -17,7 +19,7 @@
     tipo-especificador: INT | Void;
     fun-declaracao: tipo-especificador ID AP params FP composto-decl;
     params: param-lista | Void;
-    param-lista: param-lista, param | param;
+    param-lista: param-lista V param | param;
     param: tipo-especificador ID | tipo-especificador ID ACO  FCO;
     composto-decl: ACH local-declaracoes statement-lista FCH;
     local-declaracoes: local-declaracoes var-declaracao | vazio;
