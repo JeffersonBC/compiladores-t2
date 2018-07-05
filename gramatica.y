@@ -13,12 +13,12 @@
     programa: declaracao-lista;
     declaracao-lista: declaracao-lista declaracao | declaracao;
     declaracao: var-declaracao | fun-declaracao;
-    var-declaracao: tipo-especificador ID PV | tipo-especificador ID[NUM] PV;
+    var-declaracao: tipo-especificador ID PV | tipo-especificador ID ACO NUM FCO PV;
     tipo-especificador: int | void;
     fun-declaracao: tipo-especificador ID AP params FP composto-decl;
     params: param-lista | void;
     param-lista: param-lista, param | param;
-    param: tipo-especificador ID | tipo-especificador ID[ ];
+    param: tipo-especificador ID | tipo-especificador ID ACO  FCO;
     composto-decl: { local-declaracoes statement-lista };
     local-declaracoes: local-declaracoes var-declaracao | vazio;
     statement-lista: statement-lista statement | vazio;
@@ -28,7 +28,7 @@
     iteracao-decl: while AP expressao FP statement;
     retorno-decl: return; | return expressao PV;
     expressao: var = expressao | simples-expressao;
-    var: ID | ID [ expressao ];
+    var: ID | ID  ACO  expressao FCO;
     simples-expressao: soma-expressao relacional soma-expressao | soma-expressao;
     relacional: <= | < | > | >= | == | !=;
     soma-expressao: soma-expressao soma termo | termo;
