@@ -6,7 +6,7 @@
 
 %token <string> OP_LOG_NAO OP_LOG_AND OP_LOG_OR
 
-%token <string> V PV ACO FCO AP FP ASPAS
+%token <string> V PV ACO FCO AP FP ACH FCH
 
 %start programa
 %%
@@ -19,7 +19,7 @@
     params: param-lista | Void;
     param-lista: param-lista, param | param;
     param: tipo-especificador ID | tipo-especificador ID ACO  FCO;
-    composto-decl: { local-declaracoes statement-lista };
+    composto-decl: ACH local-declaracoes statement-lista FCH;
     local-declaracoes: local-declaracoes var-declaracao | vazio;
     statement-lista: statement-lista statement | vazio;
     statement: expressao-decl | composto-decl | selecao-decl | iteracao-decl | retorno-decl;
