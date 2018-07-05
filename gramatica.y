@@ -38,5 +38,5 @@
     fator:  AP expressao FP | var | ativacao | NUM;
     ativacao: ID  AP args FP;
     args: arg-lista | vazio;
-    arg-lista: arg-lista, expressao | expressao;
+    arg-lista: arg-lista V expressao | expressao;
 %%
