@@ -13,7 +13,7 @@
     programa: declaracao-lista;
     declaracao-lista: declaracao-lista declaracao | declaracao;
     declaracao: var-declaracao | fun-declaracao;
-    var-declaracao: tipo-especificador ID; | tipo-especificador ID[NUM] PV;
+    var-declaracao: tipo-especificador ID PV | tipo-especificador ID[NUM] PV;
     tipo-especificador: int | void;
     fun-declaracao: tipo-especificador ID AP params FP composto-decl;
     params: param-lista | void;
