@@ -27,7 +27,7 @@
     selecao-decl: IF AP expressao FP statement | IF AP expressao FP statement Else statement;
     iteracao-decl: While AP expressao FP statement;
     retorno-decl: Return PV | Return expressao PV;
-    expressao: var = expressao | simples-expressao;
+    expressao: var ATRIB expressao | simples-expressao;
     var: ID | ID ACO  expressao FCO;
     simples-expressao: soma-expressao relacional soma-expressao | soma-expressao;
     relacional: MEIGUAL | MENOR | MAIOR | MAIGUAL | IGUAL | DIF;
