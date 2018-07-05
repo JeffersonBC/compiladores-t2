@@ -1,4 +1,4 @@
-%token <string> ID INT Void Return
+%token <string> ID INT Void IF Return
 
 %token <string> ATRIB MUL DIV SOMA SUB
 
@@ -24,17 +24,17 @@
     statement-lista: statement-lista statement | vazio;
     statement: expressao-decl | composto-decl | selecao-decl | iteracao-decl | retorno-decl;
     expressao-decl: expressao PV | PV;
-    selecao-decl: if AP expressao FP statement | if AP expressao FP statement else statement;
+    selecao-decl: IF AP expressao FP statement | IF AP expressao FP statement else statement;
     iteracao-decl: while AP expressao FP statement;
     retorno-decl: Return PV | Return expressao PV;
     expressao: var = expressao | simples-expressao;
     var: ID | ID  ACO  expressao FCO;
     simples-expressao: soma-expressao relacional soma-expressao | soma-expressao;
-    relacional: <= | < | > | >= | == | !=;
+    relacional: MEIGUAL | MENOR | MAIOR | MAIGUAL | IGUAL | DIF;
     soma-expressao: soma-expressao soma termo | termo;
-    soma: + | -;
+    soma: SOMA | SUB;
     termo: termo mult fator | fator;
-    mult: * | /;
+    mult: MUL | DIV;
     fator:  AP expressao FP | var | ativacao | NUM;
     ativacao: ID  AP args FP;
     args: arg-lista | vazio;
