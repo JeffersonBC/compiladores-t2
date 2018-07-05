@@ -1,4 +1,4 @@
-%token <string> ID
+%token <string> ID Void
 
 %token <string> ATRIB MUL DIV SOMA SUB
 
@@ -14,15 +14,15 @@
     declaracao-lista: declaracao-lista declaracao | declaracao;
     declaracao: var-declaracao | fun-declaracao;
     var-declaracao: tipo-especificador ID PV | tipo-especificador ID ACO NUM FCO PV;
-    tipo-especificador: int | void;
+    tipo-especificador: int | Void;
     fun-declaracao: tipo-especificador ID AP params FP composto-decl;
-    params: param-lista | void;
+    params: param-lista | Void;
     param-lista: param-lista, param | param;
     param: tipo-especificador ID | tipo-especificador ID ACO  FCO;
     composto-decl: { local-declaracoes statement-lista };
     local-declaracoes: local-declaracoes var-declaracao | vazio;
     statement-lista: statement-lista statement | vazio;
-    statement: expressao-decl | composto-decl | selecao-decl | iteracao-decl |retorno-decl;
+    statement: expressao-decl | composto-decl | selecao-decl | iteracao-decl | retorno-decl;
     expressao-decl: expressao PV | PV;
     selecao-decl: if AP expressao FP statement | if AP expressao FP statement else statement;
     iteracao-decl: while AP expressao FP statement;
