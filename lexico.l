@@ -108,6 +108,15 @@ WHILE "while"
 
 %%
 
+int yywrap() {
+   // open next reference or source file and start scanning
+   if((yyin = compiler->getNextFile()) != NULL) {
+      line = 0; // reset line counter for next source file
+      return 0;
+   }
+   return 1;
+}
+
 int main(int argc, char *argv[]){
 	yyin = fopen(argv[1], "r");
     yyout = fopen("relatorio.txt", "w");

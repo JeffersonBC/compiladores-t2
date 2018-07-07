@@ -10,7 +10,7 @@ int yylex();
 %union {
 	struct AST;
     struct list;
-    
+
 	struct AST* ast;
 	struct list* list;
 	char* string;
@@ -19,11 +19,11 @@ int yylex();
 };
 
 %token VOID INT
-%token ELSE IF RETURN WHILE 
+%token ELSE IF RETURN WHILE
 %token ID NUM
-%token ATRIB MUL DIV SOMA SUB									// = * / + -
+%token ATRIB MUL DIV SOMA SUB					// = * / + -
 %token IGUAL DIF MAIOR MAIGUAL MENOR MEIGUAL	// = != > >= < <=
-%token V PV ACO FCO AP FP ACH FCH 						// , ; [ ] ( ) { }
+%token V PV ACO FCO AP FP ACH FCH 				// , ; [ ] ( ) { }
 
 %type <list> programa
 %type <list> declaracao_lista
@@ -55,133 +55,174 @@ int yylex();
 %type <type> VOID INT
 
 
+%start programa
 %%
-	programa: 
-		declaracao_lista {}			
+	programa:
+		declaracao_lista
+			{}
 		;
-	declaracao_lista: 
-		declaracao_lista declaracao {}
-		| declaracao {}								
+	declaracao_lista:
+		declaracao_lista declaracao
+			{}
+		| declaracao
+			{}
 		;
-	declaracao: 
-		var_declaracao {}						
-		| fun_declaracao {}							
+	declaracao:
+		var_declaracao
+			{}
+		| fun_declaracao
+			{}
 		;
 	var_declaracao:
-		tipo_especificador ID PV {}			
-		| tipo_especificador ID ACO NUM FCO PV {}
+		tipo_especificador ID PV
+			{}
+		| tipo_especificador ID ACO NUM FCO PV
+			{}
 		;
-	tipo_especificador: 
-		INT 						
+	tipo_especificador:
+		INT
 			{ $$ = TYPE_INT; }
-		| VOID										
+		| VOID
 			{ $$ = TYPE_VOID; }
 		;
-	fun_declaracao: 
-		tipo_especificador ID AP params FP composto_decl {}
+	fun_declaracao:
+		tipo_especificador ID AP params FP composto_decl
+			{}
 		;
-	params: 
-		param_lista {}
-		/*| vazio */
+	params:
+		param_lista
+			{}
+		| VOID
+			{}
 		;
-	param_lista: 
-		param_lista V param {}									
-		| param	{}														
+	param_lista:
+		param_lista V param
+			{}
+		| param
+			{}
 		;
-	param: 
-		tipo_especificador ID {}									
-		| tipo_especificador ID ACO FCO	{}						
+	param:
+		tipo_especificador ID
+			{}
+		| tipo_especificador ID ACO FCO
+			{}
 		;
-	composto_decl: 
-		ACH local_declaracoes statement_lista FCH {}
+	composto_decl:
+		ACH local_declaracoes statement_lista FCH
+			{}
 		;
-	local_declaracoes: 
-		local_declaracoes var_declaracao {}	
-		/*| vazio */												
+	local_declaracoes:
+		local_declaracoes var_declaracao
+			{}
+		| /* vazio */
+			{}
 		;
-	statement_lista: 
-		statement_lista statement {}	
-		/*| vazio */										
+	statement_lista:
+		statement_lista statement
+			{}
+		| /* vazio */
+			{}
 		;
-	statement: 
-		expressao_decl {}						
-		| composto_decl {}								
-		| selecao_decl {}								
-		| iteracao_decl {}								
-		| retorno_decl{}								
+	statement:
+		expressao_decl
+			{}
+		| composto_decl
+			{}
+		| selecao_decl
+			{}
+		| iteracao_decl
+			{}
+		| retorno_decl
+			{}
 		;
-	expressao_decl: 
-		expressao PV {}
-		| PV {}									
+	expressao_decl:
+		expressao PV
+			{}
+		| PV
+			{}
 		;
-	selecao_decl: 
-		IF AP simples_expressao FP statement {}		
-		| IF AP simples_expressao FP statement ELSE statement {}
+	selecao_decl:
+		IF AP expressao FP statement
+			{}
+		| IF AP expressao FP statement ELSE statement
+			{}
 		;
-	iteracao_decl: 
-		WHILE AP expressao FP statement	{}	
+	iteracao_decl:
+		WHILE AP expressao FP statement
+			{}
 		;
-	retorno_decl: 
-		RETURN PV {}
-		| RETURN expressao PV {}
+	retorno_decl:
+		RETURN PV
+			{}
+		| RETURN expressao PV
+			{}
 		;
-	expressao: 
-		var ATRIB expressao {}
-		| simples_expressao {}
+	expressao:
+		var ATRIB expressao
+			{}
+		| simples_expressao
+			{}
 		;
-	var: 
-		ID {}
-		| ID ACO expressao FCO {}
+	var:
+		ID
+			{}
+		| ID ACO expressao FCO
+			{}
 		;
-	simples_expressao: 
-		soma_expressao MEIGUAL soma_expressao 
+	simples_expressao:
+		soma_expressao MEIGUAL soma_expressao
 			{ $$ = ($1 <= $3) ? 1 : 0; }
-		| soma_expressao MENOR soma_expressao 
+		| soma_expressao MENOR soma_expressao
 			{ $$ = ($1 < $3) ? 1 : 0; }
-		| soma_expressao MAIOR soma_expressao 
+		| soma_expressao MAIOR soma_expressao
 			{ $$ = ($1 > $3) ? 1 : 0; }
-		| soma_expressao MAIGUAL soma_expressao 
+		| soma_expressao MAIGUAL soma_expressao
 			{ $$ = ($1 >= $3) ? 1 : 0; }
-		| soma_expressao IGUAL soma_expressao 
+		| soma_expressao IGUAL soma_expressao
 			{ $$ = ($1 == $3) ? 1 : 0; }
-		| soma_expressao DIF soma_expressao 
+		| soma_expressao DIF soma_expressao
 			{ $$ = ($1 != $3) ? 1 : 0; }
 		| soma_expressao
 		;
-	soma_expressao: 
-		soma_expressao SOMA termo 	
+	soma_expressao:
+		soma_expressao SOMA termo
 			{ $$ = $1 + $3; }
-		| soma_expressao SUB termo 	
+		| soma_expressao SUB termo
 			{ $$ = $1 - $3; }
 		| termo
 			{ $$ = $1; }
 		;
-	termo: 
-		termo MUL fator 			
+	termo:
+		termo MUL fator
 			{ $$ = $1 * $3; }
-		| termo DIV fator 			
+		| termo DIV fator
 			{ $$ = $1 / $3; }
 		| fator
 			{ $$ = $1; }
 		;
-	fator:  
-		AP expressao FP 			
+	fator:
+		AP expressao FP
 			{ $$ = $2; }
-		| var {}
-		| ativacao {}
-		| NUM							
+		| var
+			{}
+		| ativacao
+			{}
+		| NUM
 			{ $$ = $1; }
 		;
 	ativacao:
-		ID AP args FP {}	
+		ID AP args FP
+			{}
 		;
-	args: 
-		args V expressao {}
-		| expressao	{}
-		/*| vazio */
+	args:
+		args V expressao
+			{}
+		| expressao
+			{}
+		| /* vazio */
+			{}
 		;
 %%
-#include "ast_cons.h"
 
 int main (void) {
 	return yyparse ();
