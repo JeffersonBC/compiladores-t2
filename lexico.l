@@ -40,9 +40,9 @@ Main "main"
 Else "else"
 IF "if"
 INT "int"
-Return "return"
-Void "void"
-While "while"
+RETURN "return"
+VOID "void"
+WHILE "while"
 
 %%
 {ID}{NUM}{ID}|{ID}{NUM}|{NUM}{ID}|{NUM}{ID}{NUM} {
@@ -53,9 +53,9 @@ While "while"
 {Else} {fprintf(yyout, "%s %s\n", yytext, "ELSE");}
 {IF} {fprintf(yyout, "%s %s\n", yytext, "IF");}
 {INT} {fprintf(yyout, "%s %s\n", yytext, "INT");}
-{Return} {fprintf(yyout, "%s %s\n", yytext, "RETURN");}
-{Void} {fprintf(yyout, "%s %s\n", yytext, "VOID");}
-{While} {fprintf(yyout, "%s %s\n", yytext, "WHILE");}
+{RETURN} {fprintf(yyout, "%s %s\n", yytext, "RETURN");}
+{VOID} {fprintf(yyout, "%s %s\n", yytext, "VOID");}
+{WHILE} {fprintf(yyout, "%s %s\n", yytext, "WHILE");}
 {NUM} {fprintf(yyout, "%s %s\n", yytext, "NUM");}
 {ID} {fprintf(yyout, "%s %s\n", yytext, "ID");}
 {SOMA} {fprintf(yyout, "%s %s\n", yytext, "SOMA");}

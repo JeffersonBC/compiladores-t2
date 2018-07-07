@@ -1,17 +1,22 @@
 %{
-
-#include "ast.h"
-#include "list.h"
 #include "type.h"
-#include "ast_cons.h"
 #include <stdio.h>
 
-void yyerror (char *s);
+void yyerror(char* err, ...);
 int yylex();
 
-list* program = 0;
-
 %}
+
+%union {
+	struct AST;
+    struct list;
+    
+	struct AST* ast;
+	struct list* list;
+	char* string;
+	int integer;
+	int type;
+};
 
 %token VOID INT
 %token ELSE IF RETURN WHILE 
@@ -22,55 +27,49 @@ list* program = 0;
 
 %type <list> programa
 %type <list> declaracao_lista
-%type <ast> declaracao
-%type <ast> var_declaracao
+// %type <> declaracao
+// %type <> var_declaracao
 %type <type> tipo_especificador
-%type <ast> fun_declaracao
+// %type <> fun_declaracao
 %type <list> params
 %type <list> param_lista
-%type <ast> param
-%type <ast> composto_decl
+%type <string> param
+// %type <> composto_decl
 %type <list> local_declaracoes
 %type <list> statement_lista
-%type <ast> statement
-%type <ast> expressao_decl
-%type <ast> selecao_decl
-%type <ast> iteracao_decl
-%type <ast> retorno_decl
-%type <ast> expressao
-%type <ast> var
-%type <ast> simples_expressao
-%type <ast> soma_expressao
-%type <ast> termo
-%type <ast> fator
-%type <ast> ativacao
+// %type <> statement
+// %type <> expressao_decl
+// %type <> selecao_decl
+// %type <> iteracao_decl
+// %type <> retorno_decl
+%type <integer> expressao
+// %type <> var
+%type <integer> simples_expressao
+%type <integer> soma_expressao
+%type <integer> termo
+%type <integer> fator
+// %type <> ativacao
 %type <list> args
 %type <string> ID
 %type <integer> NUM
 %type <type> VOID INT
 
 
-%start programa
 %%
 	programa: 
-		declaracao_lista						
-			{ programa = $1; }
+		declaracao_lista {}			
 		;
 	declaracao_lista: 
-		declaracao_lista declaracao 	
-			{ $$ = append_list($1, single_list($2)); }
-		| declaracao								
-			{ $$ = single_list($1); }
+		declaracao_lista declaracao {}
+		| declaracao {}								
 		;
 	declaracao: 
-		var_declaracao 						
-		| fun_declaracao							
+		var_declaracao {}						
+		| fun_declaracao {}							
 		;
-	var_declaracao: 
-		tipo_especificador ID PV 		
-			{ $$ = var_decl($1, $2, 0, 0); }
-		| tipo_especificador ID ACO NUM FCO PV		
-			{ $$ = var_decl($1, $2, $4, 1); }
+	var_declaracao:
+		tipo_especificador ID PV {}			
+		| tipo_especificador ID ACO NUM FCO PV {}
 		;
 	tipo_especificador: 
 		INT 						
@@ -79,134 +78,113 @@ list* program = 0;
 			{ $$ = TYPE_VOID; }
 		;
 	fun_declaracao: 
-		tipo_especificador ID AP params FP composto_decl	
-			{ $$ = function($1, $2, $4, $6); }
+		tipo_especificador ID AP params FP composto_decl {}
 		;
 	params: 
-		param_lista
-		| /* vazio */															
-			{ $$ = nil_list(); }
+		param_lista {}
+		/*| vazio */
 		;
 	param_lista: 
-		param_lista V param 									
-			{ $$ = append_list($1, single_list($3)); }
-		| param															
-			{ $$ = single_list($1); }
+		param_lista V param {}									
+		| param	{}														
 		;
 	param: 
-		tipo_especificador ID 										
-			{ $$ = param($1, $2, 0); }
-		| tipo_especificador ID ACO FCO								
-			{ $$ = param($1, $2, 1); }
+		tipo_especificador ID {}									
+		| tipo_especificador ID ACO FCO	{}						
 		;
 	composto_decl: 
-		ACH local_declaracoes statement_lista FCH	
-			{ $$ = compound_stmt($2, $3); }
+		ACH local_declaracoes statement_lista FCH {}
 		;
 	local_declaracoes: 
-		local_declaracoes var_declaracao 		
-			{ $$ = append_list($1, single_list($2)); }
-		| /* vazio */												
-			{ $$ = nil_list(); }
+		local_declaracoes var_declaracao {}	
+		/*| vazio */												
 		;
 	statement_lista: 
-		statement_lista statement 		
-			{ $$ = append_list($1, single_list($2)); }
-		| /* vazio */										
-			{ $$  = nil_list(); }
+		statement_lista statement {}	
+		/*| vazio */										
 		;
 	statement: 
-		expressao_decl 							
-		| composto_decl 								
-		| selecao_decl 									
-		| iteracao_decl 								
-		| retorno_decl									
+		expressao_decl {}						
+		| composto_decl {}								
+		| selecao_decl {}								
+		| iteracao_decl {}								
+		| retorno_decl{}								
 		;
 	expressao_decl: 
-		expressao PV
-		| PV											
-			{ $$ = NULL; }
+		expressao PV {}
+		| PV {}									
 		;
 	selecao_decl: 
-		IF AP expressao FP statement 			
-			{ $$ = if_then($3, $5, NULL); }
-		| IF AP expressao FP statement ELSE statement	
-			{ $$ = if_then($3, $5, $7); }
+		IF AP simples_expressao FP statement {}		
+		| IF AP simples_expressao FP statement ELSE statement {}
 		;
 	iteracao_decl: 
-		WHILE AP expressao FP statement		
-			{ $$ = while_loop($3, $5); }
+		WHILE AP expressao FP statement	{}	
 		;
 	retorno_decl: 
-		RETURN PV 							
-			{ $$ = ret(NULL); }
-		| RETURN expressao PV							
-			{ $$ = ret($2); }
+		RETURN PV {}
+		| RETURN expressao PV {}
 		;
 	expressao: 
-		var ATRIB expressao 						
-			{ $$ = assign($1, $3); }
-		| simples_expressao
+		var ATRIB expressao {}
+		| simples_expressao {}
 		;
 	var: 
-		ID 											
-			{ $$ = variable($1); }
-		| ID ACO expressao FCO							
-			{ $$ = access($1, $3); }
+		ID {}
+		| ID ACO expressao FCO {}
 		;
 	simples_expressao: 
 		soma_expressao MEIGUAL soma_expressao 
-			{ $$ = lt($1, $3); }
+			{ $$ = ($1 <= $3) ? 1 : 0; }
 		| soma_expressao MENOR soma_expressao 
-			{ $$ = lte($1, $3); }
+			{ $$ = ($1 < $3) ? 1 : 0; }
 		| soma_expressao MAIOR soma_expressao 
-			{ $$ = gt($1, $3); }
+			{ $$ = ($1 > $3) ? 1 : 0; }
 		| soma_expressao MAIGUAL soma_expressao 
-			{ $$ = gte($1, $3); }
+			{ $$ = ($1 >= $3) ? 1 : 0; }
 		| soma_expressao IGUAL soma_expressao 
-			{ $$ = eq($1, $3); }
+			{ $$ = ($1 == $3) ? 1 : 0; }
 		| soma_expressao DIF soma_expressao 
-			{ $$ = neq($1, $3); }
+			{ $$ = ($1 != $3) ? 1 : 0; }
 		| soma_expressao
 		;
 	soma_expressao: 
 		soma_expressao SOMA termo 	
-			{ $$ = add($1, $3); }
+			{ $$ = $1 + $3; }
 		| soma_expressao SUB termo 	
-			{ $$ = sub($1, $3); }
+			{ $$ = $1 - $3; }
 		| termo
+			{ $$ = $1; }
 		;
 	termo: 
 		termo MUL fator 			
-			{ $$ = mul($1, $3); }
+			{ $$ = $1 * $3; }
 		| termo DIV fator 			
-			{ $$ = divide($1, $3); }
+			{ $$ = $1 / $3; }
 		| fator
+			{ $$ = $1; }
 		;
 	fator:  
 		AP expressao FP 			
 			{ $$ = $2; }
-		| var
-		| ativacao
+		| var {}
+		| ativacao {}
 		| NUM							
-			{ $$ = num($1); }
+			{ $$ = $1; }
 		;
 	ativacao:
-		ID AP args FP			
-			{ $$ = call($1, $3); }
+		ID AP args FP {}	
 		;
 	args: 
-		args V expressao 
-			{ $$ = append_list($1, single_list($3)); }
-		| expressao						
-			{ $$ = single_list($1); }
-		| /* vazio */							
-			{ $$ = nil_list(); }
+		args V expressao {}
+		| expressao	{}
+		/*| vazio */
 		;
 %%
+#include "ast_cons.h"
 
 int main (void) {
-	return yyparse ( );
+	return yyparse ();
 }
 
 void yyerror(char* err, ...) {
