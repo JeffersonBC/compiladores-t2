@@ -1,0 +1,17 @@
+void b (int n) {
+    n = 10;
+    return 0;
+}
+
+int m(void) {
+    void x;
+    int y;
+    int z;
+
+    a();
+
+    x = b();
+    y = 12 * (2 + 1);
+    z = y + 3;
+    y = 5 / 0;
+}

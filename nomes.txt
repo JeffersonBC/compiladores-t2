@@ -1,0 +1,4 @@
+/* Instruções para compilar e rodar o projeto em 'README.txt' */
+
+Gabriel Pinheiro de Carvalho - 7960727
+Jefferson Boldrin Cardozo - 7591671

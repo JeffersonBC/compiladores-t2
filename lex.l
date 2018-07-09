@@ -29,7 +29,7 @@ int yylex();
 "]" 		{return FCO;}
 "{" 		{return ACH;}
 "}" 		{return FCH;}
-[a-zA-Z]+	{yylval.string = strdup(yytext); return ID;}
+[a-zA-Z]	{yylval.string = yytext[0]; return ID;}
 [0-9]+		{yylval.integer = atoi(yytext); return NUM;}
 "\n"        {++yylineno;}
 [ \t\b]+    /* discard whitespace */

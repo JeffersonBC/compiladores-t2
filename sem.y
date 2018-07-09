@@ -6,6 +6,7 @@ int yylex();
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <ctype.h>
 #include "type.h"
 
@@ -16,14 +17,29 @@ int yylex();
 #define TRUE 1
 #endif
 
-int symbols[52];
+FILE *sintatica;
+FILE *semantica;
+
+int vars[52];
+int initializedV[52];
 int symbolVal(char symbol);
-int initialized[52];
 void updateSymbolVal(char symbol, int val);
+void initVar(char var, int val);
+int checkVar(char var);
+
+int funcTipo[52];
+int declaredF[52];
+void initFunc(char func, int tipo);
+int checkFunc(char func);
+int tipoFunc(char func);
+
+int errosSemanticos;
+int valorRetorno;
+
 %}
 
 %union {
-	char* string;
+	char string;
 	int integer;
 	int type;
 	char none;
@@ -42,7 +58,7 @@ void updateSymbolVal(char symbol, int val);
 %type <type> tipo_especificador VOID INT
 %type <list> params
 %type <list> param_lista
-%type <string> param ID
+%type <string> param var ativacao ID
 %type <integer> expressao simples_expressao soma_expressao termo fator NUM
 %type <list> args
 
@@ -50,25 +66,45 @@ void updateSymbolVal(char symbol, int val);
 
 programa:
 	declaracao_lista
-		{ printf("Programa\n"); }
+		{ fprintf(sintatica, "Programa com sintática correta!\n"); }
 	;
 declaracao_lista:
 	declaracao_lista declaracao
-		{ printf("declaracao_lista := declaracao_lista declaracao\n"); }
+		{ fprintf(sintatica, "declaracao_lista := declaracao_lista declaracao\n"); }
 	| declaracao
-		{ printf("declaracao_lista := declaracao\n"); }
+		{ fprintf(sintatica, "declaracao_lista := declaracao\n"); }
 	;
 declaracao:
 	var_declaracao
-		{ printf("declaracao := var_declaracao\n"); }
+		{ fprintf(sintatica, "declaracao := var_declaracao\n"); }
 	| fun_declaracao
-		{ printf("declaracao := fun_declaracao\n"); }
+		{ fprintf(sintatica, "declaracao := fun_declaracao\n"); }
 	;
 var_declaracao:
 	tipo_especificador ID PV
-		{ printf("var_declaracao := tipo_especificador ID PV\n"); }
+		{
+			fprintf(sintatica, "var_declaracao := tipo_especificador ID PV\n");
+			if ($1 == TYPE_VOID) {
+				fprintf(semantica, "***ERRO: Variável '%c' declarada como tipo void! Ela não será inicializada.\n", $2);
+				errosSemanticos++;
+			}
+			else {
+				initVar($2, 0);
+				fprintf(semantica, "Variável '%c' declarada\n", $2);
+			}
+		}
 	| tipo_especificador ID ACO NUM FCO PV
-		{ fprintf(stdin, "var_declaracao := tipo_especificador ID ACO NUM FCO PV\n"); }
+		{
+			fprintf(sintatica, "var_declaracao := tipo_especificador ID ACO NUM FCO PV\n");
+			if ($1 == TYPE_VOID) {
+				fprintf(semantica, "***ERRO: Variável '%c' declarada como tipo void! Ela não será inicializada.\n", $2);
+				errosSemanticos++;
+			}
+			else {
+				initVar($2, 0);
+				fprintf(semantica, "Variável '%c' declarada\n", $2);
+			}
+		}
 	;
 tipo_especificador:
 	INT
@@ -78,118 +114,187 @@ tipo_especificador:
 	;
 fun_declaracao:
 	tipo_especificador ID AP params FP composto_decl
-		{ printf("fun_declaracao := tipo_especificador ID AP params FP composto_decl\n"); }
+		{
+			initFunc($2, $1);
+			fprintf(sintatica, "fun_declaracao := tipo_especificador ID AP params FP composto_decl\n");
+
+			if ($1 == TYPE_VOID)
+				fprintf(semantica, "Função '%c' declarada como void\n", $2);
+			else
+				fprintf(semantica, "Função '%c' declarada como int\n", $2);
+
+			/* ERROS */
+			if ($1 == TYPE_VOID && valorRetorno == TRUE) {
+				fprintf(semantica, "***ERRO: Retornando valor numérico em função '%c' void\n", $2);
+				errosSemanticos++;
+			}
+			else if ($1 == TYPE_INT && valorRetorno == FALSE) {
+				fprintf(semantica, "***ERRO: Não retornando valor numérico em função '%c' int\n", $2);
+				errosSemanticos++;
+			}
+			valorRetorno = FALSE;
+		}
 	;
 params:
 	param_lista
-		{ printf("params := param_lista\n"); }
+		{ fprintf(sintatica, "params := param_lista\n"); }
 	| VOID
-		{ printf("params := VOID\n"); }
+		{ fprintf(sintatica, "params := VOID\n"); }
 	;
 param_lista:
 	param_lista V param
-		{ printf("param_lista := param_lista V param\n"); }
+		{ fprintf(sintatica, "param_lista := param_lista V param\n"); }
 	| param
-		{ printf("param_lista := param\n"); }
+		{ fprintf(sintatica, "param_lista := param\n"); }
 	;
 param:
 	tipo_especificador ID
-		{ printf("param := tipo_especificador ID\n"); }
+		{
+			fprintf(sintatica, "param := tipo_especificador ID\n");
+			if ($1 == TYPE_VOID) {
+				fprintf(semantica, "***ERRO: Parâmetro '%c' declarada como tipo void!\n", $2);
+				errosSemanticos++;
+			}
+			else {
+				initVar($2, 0);
+				fprintf(semantica, "Parâmetro '%c' declarado\n", $2);
+			}
+		}
 	| tipo_especificador ID ACO FCO
-		{ printf("param := tipo_especificador ID ACO FCO\n"); }
+		{
+			fprintf(sintatica, "param := tipo_especificador ID ACO FCO\n");
+			if ($1 == TYPE_VOID) {
+				fprintf(semantica, "***ERRO: Parâmetro '%c' declarada como tipo void!\n", $2);
+				errosSemanticos++;
+			}
+			else {
+				initVar($2, 0);
+				fprintf(semantica, "Parâmetro '%c' declarado\n", $2);
+			}
+		}
 	;
 composto_decl:
 	ACH local_declaracoes statement_lista FCH
-		{ printf("composto_decl := ACH local_declaracoes statement_lista FCH\n"); }
+		{ fprintf(sintatica, "composto_decl := ACH local_declaracoes statement_lista FCH\n"); }
 	;
 local_declaracoes:
 	local_declaracoes var_declaracao
-		{ printf("local_declaracoes := local_declaracoes var_declaracao\n"); }
+		{ fprintf(sintatica, "local_declaracoes := local_declaracoes var_declaracao\n"); }
 	| /* vazio */
-		{ printf("local_declaracoes := \n"); }
+		{ fprintf(sintatica, "local_declaracoes := \n"); }
 	;
 statement_lista:
 	statement_lista statement
-		{ printf("statement_lista := statement_lista statement\n"); }
+		{ fprintf(sintatica, "statement_lista := statement_lista statement\n"); }
 	| /* vazio */
-		{ printf("statement_lista := \n"); }
+		{ fprintf(sintatica, "statement_lista := \n"); }
 	;
 statement:
 	expressao_decl
-		{ printf("statement := expressao_decl\n"); }
+		{ fprintf(sintatica, "statement := expressao_decl\n"); }
 	| composto_decl
-		{ printf("statement := composto_decl\n"); }
+		{ fprintf(sintatica, "statement := composto_decl\n"); }
 	| selecao_decl
-		{ printf("statement := selecao_decl\n"); }
+		{ fprintf(sintatica, "statement := selecao_decl\n"); }
 	| iteracao_decl
-		{ printf("statement := iteracao_decl\n"); }
+		{ fprintf(sintatica, "statement := iteracao_decl\n"); }
 	| retorno_decl
-		{ printf("statement := retorno_decl\n"); }
+		{ fprintf(sintatica, "statement := retorno_decl\n"); }
 	;
 expressao_decl:
 	expressao PV
-		{ printf("expressao_decl := expressao PV\n"); }
+		{ fprintf(sintatica, "expressao_decl := expressao PV\n"); }
 	| PV
-		{ printf("expressao_decl := PV\n"); }
+		{ fprintf(sintatica, "expressao_decl := PV\n"); }
 	;
 selecao_decl:
 	IF AP expressao FP statement
-		{ printf("selecao_decl := IF AP expressao FP statement\n"); }
+		{ fprintf(sintatica, "selecao_decl := IF AP expressao FP statement\n"); }
 	| IF AP expressao FP statement ELSE statement
-		{ printf("selecao_decl := IF AP expressao FP statement ELSE statement\n"); }
+		{ fprintf(sintatica, "selecao_decl := IF AP expressao FP statement ELSE statement\n"); }
 	;
 iteracao_decl:
 	WHILE AP expressao FP statement
-		{ printf("iteracao_decl := WHILE AP expressao FP statement\n"); }
+		{ fprintf(sintatica, "iteracao_decl := WHILE AP expressao FP statement\n"); }
 	;
 retorno_decl:
 	RETURN PV
-		{ printf("retorno_decl := RETURN PV\n"); }
+		{
+			fprintf(sintatica, "retorno_decl := RETURN PV\n");
+			valorRetorno = FALSE;
+		}
 	| RETURN expressao PV
-		{ printf("retorno_decl := RETURN expressao PV\n"); }
+		{
+			fprintf(sintatica, "retorno_decl := RETURN expressao PV\n");
+			valorRetorno = TRUE;
+		}
 	;
 expressao:
 	var ATRIB expressao
-		{ printf("expressao := var ATRIB expressao\n"); }
+		{
+			if (checkVar($1) == TRUE) {
+				updateSymbolVal($1, $3);
+				fprintf(sintatica, "expressao := var ATRIB expressao\n");
+				fprintf(semantica, "Atribuindo '%d' à variável '%c'\n", $3, $1);
+			}
+			else {
+				fprintf(semantica, "***ERRO: Tentando atribuir valor à variável não inicializada '%c'\n", $1);
+				errosSemanticos++;
+			}
+		}
 	| simples_expressao
-		{ printf("expressao := simples_expressao\n"); }
+		{ fprintf(sintatica, "expressao := simples_expressao\n"); }
 	;
 var:
 	ID
-		{ printf("var := ID\n"); }
+		{
+			fprintf(sintatica, "var := ID\n");
+			if (checkVar($1) == FALSE) {
+				fprintf(semantica, "***ERRO: Tentando acessar variável '%c' não inicializada\n", $1);
+				errosSemanticos++;
+			}
+			$$ = $1;
+		}
 	| ID ACO expressao FCO
-		{ printf("var := ID ACO expressao FCO\n"); }
+		{
+			fprintf(sintatica, "var := ID ACO expressao FCO\n");
+			if (checkVar($1) == FALSE) {
+				fprintf(semantica, "***ERRO: Tentando acessar variável '%c' não inicializada\n", $1);
+				errosSemanticos++;
+			}
+			$$ = $1;
+		}
 	;
 simples_expressao:
 	soma_expressao MEIGUAL soma_expressao
 		{
 			$$ = ($1 <= $3) ? 1 : 0;
-			printf("simples_expressao := soma_expressao MEIGUAL soma_expressao\n");
+			fprintf(sintatica, "simples_expressao := soma_expressao <= soma_expressao\n");
 		}
 	| soma_expressao MENOR soma_expressao
 		{
 			$$ = ($1 < $3) ? 1 : 0;
-			printf("simples_expressao := soma_expressao MEIGUAL soma_expressao\n");
+			fprintf(sintatica, "simples_expressao := soma_expressao < soma_expressao\n");
 		}
 	| soma_expressao MAIOR soma_expressao
 		{
 			$$ = ($1 > $3) ? 1 : 0;
-			printf("simples_expressao := soma_expressao MEIGUAL soma_expressao\n");
+			fprintf(sintatica, "simples_expressao := soma_expressao > soma_expressao\n");
 		}
 	| soma_expressao MAIGUAL soma_expressao
 		{
 			$$ = ($1 >= $3) ? 1 : 0;
-			printf("simples_expressao := soma_expressao MEIGUAL soma_expressao\n");
+			fprintf(sintatica, "simples_expressao := soma_expressao >= soma_expressao\n");
 		}
 	| soma_expressao IGUAL soma_expressao
 		{
 			$$ = ($1 == $3) ? 1 : 0;
-			printf("simples_expressao := soma_expressao MEIGUAL soma_expressao\n");
+			fprintf(sintatica, "simples_expressao := soma_expressao == soma_expressao\n");
 		}
 	| soma_expressao DIF soma_expressao
 		{
 			$$ = ($1 != $3) ? 1 : 0;
-			printf("simples_expressao := soma_expressao MEIGUAL soma_expressao\n");
+			fprintf(sintatica, "simples_expressao := soma_expressao != soma_expressao\n");
 		}
 	| soma_expressao
 	;
@@ -197,73 +302,92 @@ soma_expressao:
 	soma_expressao SOMA termo
 		{
 			$$ = $1 + $3;
-			print("soma_expressao := soma_expressao SOMA termo\n");
+			fprintf(sintatica, "soma_expressao := soma_expressao + termo\n");
 		}
 	| soma_expressao SUB termo
 		{
 			$$ = $1 - $3;
-			print("soma_expressao := soma_expressao SUB termo\n");
+			fprintf(sintatica, "soma_expressao := soma_expressao - termo\n");
 		}
 	| termo
 		{
 			$$ = $1;
-			print("soma_expressao := termo\n");
+			fprintf(sintatica, "soma_expressao := termo\n");
 		}
 	;
 termo:
 	termo MUL fator
 		{
 			$$ = $1 * $3;
-			printf("termo := termo MUL fator\n");
+			fprintf(sintatica, "termo := termo * fator\n");
 		}
 	| termo DIV fator
 		{
-			$$ = $1 / $3;
-			printf("termo := termo DIV fator\n");
+			if ($3 == 0) {
+				$$ = $1; // divisão não é feita
+				fprintf(semantica, "***ERRO: Tentativa de divisão por 0! Divisão será ignorada.\n");
+				errosSemanticos++;
+			}
+			else {
+				$$ = $1 / $3;
+				fprintf(sintatica, "termo := termo / fator\n");
+			}
 		}
 	| fator
 		{
 			$$ = $1;
-			printf("termo := fator\n");
+			fprintf(sintatica, "termo := fator\n");
 		}
 	;
 fator:
 	AP expressao FP
 		{
 			$$ = $2;
-			printf("fator := AP expressao FP\n");
+			fprintf(sintatica, "fator := AP expressao FP\n");
 		}
 	| var
 		{
-			printf("fator := var\n");
+			$$ = symbolVal($1);
+			fprintf(sintatica, "fator := var\n");
 		}
 	| ativacao
 		{
-			printf("fator := ativacao\n");
+			fprintf(sintatica, "fator := ativacao\n");
 		}
 	| NUM
 		{
 			$$ = $1;
-			printf("fator := NUM\n");
+			fprintf(sintatica, "fator := NUM\n");
 		}
 	;
 ativacao:
 	ID AP args FP
-		{ printf("ativacao := ID AP args FP\n"); }
+		{
+			fprintf(sintatica, "ativacao := ID AP args FP\n");
+
+			if (checkFunc($1) == FALSE) {
+				fprintf(semantica, "***ERRO: Tentando acessar função '%c' não inicializada!\n", $1);
+				errosSemanticos++;
+			}
+			else {
+				fprintf(semantica, "Executando função '%c'\n", $1);
+			}
+
+			$$ = $1; // repassar nome da função a 'ativacao'
+		}
 	;
 args:
 	args V expressao
-		{ printf("args := args V expressao\n"); }
+		{ fprintf(sintatica, "args := args V expressao\n"); }
 	| expressao
-		{ printf("args := expressao\n"); }
+		{ fprintf(sintatica, "args := expressao\n"); }
 	| /* vazio */
-		{ printf("args :=\n"); }
+		{ fprintf(sintatica, "args :=\n"); }
 	;
 
 %% /* CÓDIGO C */
 
-int computeSymbolIndex(char token)
-{
+int computeSymbolIndex(char token) {
 	int idx = -1;
 	if(islower(token)) {
 		idx = token - 'a' + 26;
@@ -273,35 +397,71 @@ int computeSymbolIndex(char token)
 	return idx;
 }
 
-/* returns the value of a given symbol */
-int symbolVal(char symbol)
-{
+// Funções auxiliares para variáveis
+int symbolVal(char symbol) {
 	int bucket = computeSymbolIndex(symbol);
-	return symbols[bucket];
+	return vars[bucket];
 }
 
-/* updates the value of a given symbol */
-void updateSymbolVal(char symbol, int val)
-{
+void updateSymbolVal(char symbol, int val) {
 	int bucket = computeSymbolIndex(symbol);
-	symbols[bucket] = val;
+	vars[bucket] = val;
 }
 
 void initVar(char var, int val) {
 	int bucket = computeSymbolIndex(var);
-	initialized[bucket] = TRUE;
-	symbols[bucket] = val;
+	initializedV[bucket] = TRUE;
+	vars[bucket] = val;
 }
 
+int checkVar(char var) {
+	int bucket = computeSymbolIndex(var);
+	return (initializedV[bucket] == TRUE ? TRUE : FALSE);
+}
+
+// Funções auxiliares para funções
+void initFunc(char func, int tipo) {
+	int bucket = computeSymbolIndex(func);
+	declaredF[bucket] = TRUE;
+	funcTipo[bucket] = tipo;
+}
+
+int checkFunc(char func) {
+	int bucket = computeSymbolIndex(func);
+	return (declaredF[bucket] == TRUE ? TRUE : FALSE);
+}
+
+int tipoFunc(char func) {
+	int bucket = computeSymbolIndex(func);
+	return (funcTipo[bucket] == TYPE_INT ? TYPE_INT : TYPE_VOID);
+}
+
+
 int main (void) {
-	/* init symbol table */
+	sintatica = fopen("sintatica.txt", "w");
+	semantica = fopen("semantica.txt", "w");
+
+	valorRetorno = FALSE;
+	errosSemanticos = 0;
+
+	/* tabela de símbolos */
 	int i;
 	for(i=0; i<52; i++) {
-		symbols[i] = 0;
-		initialized[i] = FALSE;
+		vars[i] = 0;
+		initializedV[i] = FALSE;
+
+		funcTipo[i] = 0;
+		declaredF[i] = FALSE;
 	}
 
-	return yyparse ( );
+	yyparse ();
+
+	fprintf(semantica, "\nAnálise semântica encerrada com '%d' erros\n", errosSemanticos);
+
+	fclose(sintatica);
+	fclose(semantica);
+
+	return 0;
 }
 
 void yyerror (char *s) {fprintf (stderr, "%s\n", s);}
